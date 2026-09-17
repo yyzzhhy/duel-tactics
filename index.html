@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Duel · 决斗</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:,">
+</head>
+
+<body>
+
+    <div id="screen-main" class="screen active">
+        <div class="scroll-frame">
+            <div class="menu-title">DUEL</div>
+            <div class="menu-sub">PARCHMENT TACTICS</div>
+            <button class="menu-btn" data-action="play">单 人 对 战</button>
+            <button class="menu-btn" data-action="level">关 卡 模 式</button>
+            <button class="menu-btn" data-action="online">联 机 对 战</button>
+            <button class="menu-btn" data-action="collection">卡 牌 图 鉴</button>
+        </div>
+    </div>
+
+    <div id="screen-collection" class="screen">
+        <header class="topbar">
+            <button class="btn" data-back>← 返回</button>
+            <h2>卡牌图鉴 / 卡组编辑</h2>
+            <span class="spacer"></span>
+            <span class="info" id="cards-info"></span>
+            <button class="btn primary" id="deck-save">保存</button>
+            <button class="btn danger" id="deck-clear">清空</button>
+        </header>
+        <div class="filters">
+            <div class="filter-row" data-label="种族" id="filter-race"></div>
+            <div class="filter-row" data-label="稀有" id="filter-rarity"></div>
+            <div class="filter-row" data-label="拥有" id="filter-owned"></div>
+        </div>
+        <div class="cards-body">
+            <div class="card-grid" id="card-pool"></div>
+            <aside class="deck-panel">
+                <h3>当前卡组 <span id="deck-size">0 / 30</span></h3>
+                <div class="deck-list" id="deck-list"></div>
+            </aside>
+        </div>
+    </div>
+
+    <div id="screen-level" class="screen">
+        <header class="topbar">
+            <button class="btn" data-back>← 返回</button>
+            <h2>关卡模式</h2>
+            <span class="spacer"></span>
+            <span class="info">通关获得精英紫卡奖励</span>
+        </header>
+        <div class="level-body">
+            <div class="level-grid" id="level-grid"></div>
+        </div>
+    </div>
+
+    <div id="screen-lobby" class="screen">
+        <header class="topbar">
+            <button class="btn" data-back>← 返回</button>
+            <h2>联机对战</h2>
+            <span class="spacer"></span>
+            <span class="info">同一浏览器多标签页联机</span>
+        </header>
+        <div class="lobby-body">
+            <div class="lobby-panel">
+                <h3>创建房间</h3>
+                <p>生成房间码，把它发给你的对手。</p>
+                <button class="btn primary" id="btn-create-room">生成房间码</button>
+                <div id="host-info" style="display:none;">
+                    <div class="room-code" id="room-code">----</div>
+                    <div class="lobby-status" id="host-status">等待对手加入…</div>
+                    <button class="btn primary" id="btn-host-start" disabled>开始游戏</button>
+                </div>
+            </div>
+            <div class="lobby-panel">
+                <h3>加入房间</h3>
+                <p>输入房主提供的 4 位房间码。</p>
+                <input id="input-room-code" maxlength="4" placeholder="XXXX" autocomplete="off" />
+                <button class="btn primary" id="btn-join-room">加入房间</button>
+                <div class="lobby-status" id="client-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <canvas id="game-canvas"></canvas>
+        <div id="game-top">
+            <div class="pill"><b>蓝方</b> <span id="hp0">100</span>/100
+                <div class="bar"><i id="bar0" style="width:100%;background:#3d8bfd"></i></div>
+            </div>
+            <div class="pill" id="turnPill">准备中…</div>
+            <div class="pill"><b>红方</b> <span id="hp1">100</span>/100
+                <div class="bar"><i id="bar1" style="width:100%;background:#c33"></i></div>
+            </div>
+        </div>
+
+        <div id="game-side">
+            <div id="log"></div>
+            <div id="unit-cap" class="unit-cap">场上 <b>0</b>/10 · 己方半场 <b>0</b>/4</div>
+            <div id="game-actions">
+                <button class="btn primary" id="btnPhase">进入行动阶段</button>
+                <button class="btn danger" id="btnSurrender">投降</button>
+            </div>
+        </div>
+
+        <div id="game-bottom">
+            <div id="hand-frame">
+                <span class="frame-label">手牌</span>
+                <div id="hand"></div>
+            </div>
+            <div id="deck-area">
+                <span class="frame-label">牌库</span>
+                <div id="deck-pile">
+                    <div class="deck-stack s1"></div>
+                    <div class="deck-stack s2"></div>
+                    <div class="deck-stack s3"></div>
+                    <div class="deck-count" id="deck-count">30</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ★ 战斗操作提示按钮（左上角） -->
+        <button id="tips-btn" class="tips-btn" title="操作提示">
+            <span>?</span>
+        </button>
+
+    <!-- ★ 提示面板 -->
+    <div id="tips-panel" class="tips-panel">
+        <h4>操作提示</h4>
+        <div class="tips-line"><b>鼠标左键</b>：选取</div>
+        <div class="tips-line"><b>鼠标右键拖动</b>：旋转视角</div>
+        <div class="tips-line"><b>滚轮</b>：缩放视角</div>
+        <div class="tips-sep"></div>
+        <div class="tips-line">选中单位后：</div>
+        <div class="tips-line"><b>Z</b>：显示攻击范围</div>
+        <div class="tips-line"><b>X</b>：显示移动范围</div>
+        <div class="tips-line"><b>C</b>：铲除选中单位</div>
+        <div class="tips-sep"></div>
+        <div class="tips-line">点击敌人：攻击</div>
+        <div class="tips-line">点击空地：移动</div>
+    </div>
+
+        <button id="music-btn" class="music-btn" title="战斗音乐">
+            <span id="music-icon">♪</span>
+        </button>
+
+        <button id="follow-btn" class="follow-btn" title="跟随选中单位视角">
+            <span id="follow-icon">⊙</span>
+        </button>
+
+        <div id="toast"></div>
+        <div id="game-over">
+            <div class="scroll-frame">
+                <h1 id="game-over-title">胜利</h1>
+                <button class="menu-btn" id="back-to-main">返 回 主 界 面</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
